@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +9,125 @@
     <link rel="stylesheet" href="style.css">
     <title>Global Temperature</title>
 </head>
+
 <body>
-    
+
+    <main>
+
+    </main>
 
     <script>
         window.onload = function () {
             document.addEventListener("DOMContentLoaded", loadData());
         }
 
-        function loadData() {   
-            console.log('Working')
+        function loadData() {
+            var url = 'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json';
+
+            var request = new XMLHttpRequest();
+            request.responseType = 'json';
+            request.open('GET', url, true);
+            request.send();
+            request.onload = function () {
+                var data = request.response;
+                loadChart(data);
+            }
+        }
+
+        function loadChart(data) {
+            var baseTemperature = data.baseTemperature;
+            var monthlyVariance = data.monthlyVariance;
+
+            var margin = 80;
+            var width = 1600 - 2 * margin;
+            var height = 600 - 2 * margin;
+
+            var svg = d3.select('main')
+                .append('svg')
+                .attr('width', '1600')
+                .attr('height', '600');
+
+            var chart = svg.append('g')
+                .attr('transform', `translate(${margin}, ${margin})`)
+
+
+            var years = monthlyVariance.map(x => x.year);
+
+            var months = monthlyVariance.map(x => x.month);
+
+            var xAxis = d3.scaleLinear()
+                .range([0, width])
+                .domain([d3.min(years), d3.max(years)]);
+
+
+            var yAxis = d3.scaleLinear()
+                .range([0, height])
+                .domain([d3.min(months), d3.max(months)]);
+
+            chart.append('g')
+                .attr('id', 'x-axis')
+                .attr('transform', `translate(0, ${height + 25})`)
+                .call(d3.axisBottom(xAxis));
+
+            chart.append('g')
+                .attr('id', 'y-axis')
+
+                .call(d3.axisLeft(yAxis));
+
+
+
+            const temperatureGroups = chart.selectAll()
+
+
+                .append('g')
+                .data(monthlyVariance)
+                .enter()
+                .append('rect')
+                .attr('x', (x, i) => xAxis(years[i]) + 2)
+                .attr('y', (x, i) => yAxis(months[i]) - 15)
+                .attr('height', '40px')
+                .attr('width', '10px')
+                .attr('fill', (x) => {
+                    var temperature = baseTemperature + x.variance;
+                    console.log(temperature);
+                    var color = getColorBasedOnTemperature(temperature);
+
+                    console.log(color);
+
+                    return color;
+                });
+
+
+        }
+
+        function getColorBasedOnTemperature(temperature) {
+
+            if (temperature < 2.8) return '#0032ff';
+
+            if (temperature < 3.9) return '#00a4ff';
+
+            if (temperature < 5) return '#00ffd0';
+
+            if (temperature < 6.1) return '#00ff10';
+
+            if (temperature < 7.2) return '#65ff00';
+
+            if (temperature < 8.3) return '#d7ff00';
+
+            if (temperature < 9.5) return '#FFdc00';
+
+            if (temperature < 10.6) return '#FFa000';
+
+            if (temperature < 11.7) return '#FF8200';
+
+            if (temperature < 12.8) return '#FF2800';
+
+            return '#FF0000';
+
         }
     </script>
-    
+
     <script src="d3.min.js"></script>
 </body>
+
 </html>
