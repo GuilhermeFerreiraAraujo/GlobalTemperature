@@ -39,13 +39,13 @@
             var monthlyVariance = data.monthlyVariance;
 
             var margin = 80;
-            var width = 1200 - 2 * margin;
+            var width = 1150 - 2 * margin;
             var height = 600 - 2 * margin;
 
             var svg = d3.select('main')
                 .append('svg')
                 .attr('width', '1200')
-                .attr('height', '700');
+                .attr('height', '620');
 
             svg.append("text")
                 .attr("id", "title")
@@ -56,8 +56,6 @@
                 .text("Monthly Global Land-Surface Temperature");
 
             var years = monthlyVariance.map(x => x.year);
-            var months = monthlyVariance.map(x => x.month);
-
 
             svg.append("text")
                 .attr("id", "description")
@@ -67,16 +65,8 @@
                 .style("font-size", "15px")
                 .text(`${d3.min(years)} - ${d3.max(years)}: base temperature ${baseTemperature}℃`);
 
-            svg.append("text")
-                .attr("x", width / 2 + margin)
-                .attr("y", 570)
-                .attr("text-anchor", "middle")
-                .style("font-size", "15px")
-                .text('Years');
-
             var chart = svg.append('g')
-                .attr('transform', `translate(${margin}, ${margin})`)
-
+                .attr('transform', `translate(${margin + 40}, ${margin})`)
 
             var xAxis = d3.scaleLinear()
                 .range([0, width])
@@ -84,28 +74,30 @@
 
             var yAxis = d3.scaleBand()
                 .range([0, height])
-                .domain(months);
+                .domain([1,2,3,4,5,6,7,8,9,10,11,12]);
 
             chart.append('g')
                 .attr('id', 'x-axis')
                 .attr('transform', `translate(0, ${height})`)
-                .call(d3.axisBottom(xAxis).ticks().tickFormat(x => x.toString()));
+                .call(d3.axisBottom(xAxis).tickFormat(x => x.toString()))
 
             chart.append('g')
                 .attr('id', 'y-axis')
-                .call(d3.axisLeft(yAxis).ticks().tickFormat(x => getMonthName(x - 1)));
+                .call(d3.axisLeft(yAxis).tickFormat(x => getMonthName(x)));
 
             const temperatureGroups = chart.selectAll()
                 .append('g')
                 .data(monthlyVariance)
                 .enter()
                 .append('rect')
-                .attr('data-month', d => d.month)
+                .attr('class', 'cell')
+                .attr('data-month', d => d.month - 1)
                 .attr('data-year', d => d.year)
                 .attr('data-temp', d => baseTemperature + d.variance)
-                .attr('class', 'cell')
-                .attr('x', (x, i) => xAxis(years[i]) + 1)
-                .attr('y', (x, i) => yAxis(months[i]))
+                .attr('x', (x) => xAxis(x.year) + 1)
+                .attr('y', (item) => {
+                    return yAxis(item.month);
+                })
                 .attr('height', '36px')
                 .attr('width', '5px')
                 .attr('fill', (x) => {
@@ -114,15 +106,40 @@
                     return color;
                 });
 
+            d3.selectAll("rect")
+                .on("mouseenter", function (actual, i) {
+                    var tooltip = d3.select("main")
+                        .append("div")
+                        .attr("id", "tooltip")
+                        .attr("data-year", actual.year)
+                        .attr("class", "tooltip");
+
+                    tooltip.append("p")
+                        .text(`${actual.year} - ${getMonthName(actual.month)} `);
+
+                    tooltip.append("p")
+                        .text(`${baseTemperature + actual.variance} ℃`);
+
+                    tooltip.append("p")
+                        .text(`${actual.variance}`);
+                })
+                .on("mousemove", function () {
+                    d3.select("#tooltip")
+                        .style("top", (event.pageY + 25) + "px")
+                        .style("left", (event.pageX + 25) + "px");
+                })
+                .on("mouseout", function () {
+                    d3.select("#tooltip").remove();
+                });
+
             appendLegend();
         }
 
         function getMonthName(month) {
-            var months = ["January", "February", "March", "April", "May", "June",
+            var months = ["","January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
             return months[month];
         }
-
 
         function appendLegend() {
             var svg = d3.select('svg');
@@ -132,7 +149,7 @@
 
             var legend = svg.append('g')
                 .attr('id', 'legend')
-                .attr('transform', `translate(${margin}, ${height + margin + 30})`);
+                .attr('transform', `translate(${margin + 40}, ${height + margin + 30})`);
 
             var colorsByTemperature = [
                 [14, '#FF4600'],
@@ -173,8 +190,6 @@
                 });
         }
 
-
-
         function getColorBasedOnTemperature(temperature) {
             if (temperature < 1) return '#0032ff';
             if (temperature < 2) return '#0084ff';
@@ -194,6 +209,7 @@
         }
     </script>
 
+    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
     <script src="d3.min.js"></script>
 </body>
 
