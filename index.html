@@ -50,80 +50,61 @@
             var chart = svg.append('g')
                 .attr('transform', `translate(${margin}, ${margin})`)
 
-
             var years = monthlyVariance.map(x => x.year);
-
             var months = monthlyVariance.map(x => x.month);
 
             var xAxis = d3.scaleLinear()
                 .range([0, width])
                 .domain([d3.min(years), d3.max(years)]);
 
-
-            var yAxis = d3.scaleLinear()
+            var yAxis = d3.scaleBand()
                 .range([0, height])
-                .domain([d3.min(months), d3.max(months)]);
+                .domain(months);
 
             chart.append('g')
                 .attr('id', 'x-axis')
-                .attr('transform', `translate(0, ${height + 25})`)
-                .call(d3.axisBottom(xAxis));
+                .attr('transform', `translate(0, ${height})`)
+                .call(d3.axisBottom(xAxis).ticks().tickFormat(x => x.toString()));
 
             chart.append('g')
                 .attr('id', 'y-axis')
-
-                .call(d3.axisLeft(yAxis));
-
-
+                .call(d3.axisLeft(yAxis).ticks().tickFormat(x => getMonthName(x - 1)));
 
             const temperatureGroups = chart.selectAll()
-
-
                 .append('g')
                 .data(monthlyVariance)
                 .enter()
                 .append('rect')
-                .attr('x', (x, i) => xAxis(years[i]) + 2)
-                .attr('y', (x, i) => yAxis(months[i]) - 15)
-                .attr('height', '40px')
+                .attr('x', (x, i) => xAxis(years[i]) + 1)
+                .attr('y', (x, i) => yAxis(months[i]))
+                .attr('height', '36px')
                 .attr('width', '10px')
                 .attr('fill', (x) => {
                     var temperature = baseTemperature + x.variance;
-                    console.log(temperature);
                     var color = getColorBasedOnTemperature(temperature);
-
-                    console.log(color);
-
                     return color;
                 });
+        }
 
+        function getMonthName(month) {
+            var months = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
 
+            return months[month];
         }
 
         function getColorBasedOnTemperature(temperature) {
-
             if (temperature < 2.8) return '#0032ff';
-
             if (temperature < 3.9) return '#00a4ff';
-
             if (temperature < 5) return '#00ffd0';
-
             if (temperature < 6.1) return '#00ff10';
-
             if (temperature < 7.2) return '#65ff00';
-
             if (temperature < 8.3) return '#d7ff00';
-
             if (temperature < 9.5) return '#FFdc00';
-
             if (temperature < 10.6) return '#FFa000';
-
             if (temperature < 11.7) return '#FF8200';
-
             if (temperature < 12.8) return '#FF2800';
-
             return '#FF0000';
-
         }
     </script>
 
